@@ -1,0 +1,72 @@
+pip install nltk
+
+
+import nltk
+nltk.download('punkt')
+nltk.download('stopwords')
+
+import nltk
+from nltk.tokenize import word_tokenize
+from nltk.corpus import stopwords
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.naive_bayes import MultinomialNB
+import numpy as np
+import requests
+
+print("Hai,Welcome to medical assitance chatbot")
+print("Kindly provide me with your symptoms so that I can help you")
+# Sample dataset of symptoms and diseases
+dataset = [
+    ("fever cough headache", "Common Cold"),
+    ("fever sore throat fatigue", "Flu"),
+    ("shortness of breath chest pain", "Heart Disease"),
+    # Add more symptoms and diseases as needed
+]
+
+# Preprocessing function
+def preprocess(text):
+    tokens = word_tokenize(text.lower())
+    stop_words = set(stopwords.words('english'))
+    filtered_tokens = [token for token in tokens if token.isalnum() and token not in stop_words]
+    return ' '.join(filtered_tokens)
+
+# Preprocess dataset
+X = [preprocess(symptoms) for symptoms, _ in dataset]
+y = [disease for _, disease in dataset]
+
+# Vectorize text data
+vectorizer = TfidfVectorizer()
+X_vectorized = vectorizer.fit_transform(X)
+
+# Train a classifier
+classifier = MultinomialNB()
+classifier.fit(X_vectorized, y)
+
+# Function to classify input symptoms
+def detect_disease(symptoms):
+    preprocessed_symptoms = preprocess(symptoms)
+    symptoms_vectorized = vectorizer.transform([preprocessed_symptoms])
+    predicted_disease = classifier.predict(symptoms_vectorized)
+    return predicted_disease[0]
+
+# Function to recommend doctor based on disease
+def recommend_doctor(disease, language="en"):
+    # Replace this with your API endpoint or database query to recommend doctors
+    # For simplicity, we'll just print a generic recommendation
+    if language == "en":
+        return "We recommend consulting a general physician for {}".format(disease)
+    elif language == "es":
+        return "Recomendamos consultar a un médico general para {}".format(disease)
+    # Add more languages as needed
+
+# Example usage
+while True:
+    user_input = input("Enter your symptoms: ")
+    if user_input.lower() == 'quit':
+        break
+    disease = detect_disease(user_input)
+    print("Detected disease:", disease)
+    language = input("Enter your preferred language (en/es): ")
+    doctor_recommendation = recommend_doctor(disease, language)
+    print("Doctor recommendation:", doctor_recommendation)
+
